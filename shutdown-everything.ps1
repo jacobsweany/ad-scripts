@@ -1,4 +1,11 @@
 # Test connection, shut down if online. Either way log to file
+
+$Workstations = "\\path\file.txt"
+$WorkstationsClean = "\\path\file-clean.txt"
+
+$Online = "\\path\Online.txt"
+$Offline = "\\path\Offline.txt"
+
 foreach ($Computer in $Computers) {
     $test = Test-Connection -ComputerName $Computer -Count 1 -Quiet -BufferSize 16
      if ($test) {
@@ -21,6 +28,8 @@ foreach ($Computer in $Computers) {
      }
      else {
         Write-Output "$Computer" | Out-File $Offline -Append
+        # Remove computer name out of Online
+        (Get-Content $Online) -notmatch "$Computer" | Out-File $Online
      }
 }
 
