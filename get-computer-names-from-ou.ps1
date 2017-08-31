@@ -23,9 +23,9 @@ if ($ClearFiles) {
 # Output computer names to text file. Duplicate this line for each OU as necessary.
 Get-ADComputer -SearchBase 'OU=Path,DC=test,DC=com' -Filter '*' | select -Exp Name | Out-File $Workstations -Append
 
-# Optional OU
+# Optional OU, filters only computers that start with "WS"
 if ($IncludeOptionalOU) {
-    Get-ADComputer -SearchBase 'OU=OptPath,DC=test,DC=com' -Filter '*' | select -Exp Name | Out-File $Workstations -Append
+    Get-ADComputer -SearchBase 'OU=OptPath,DC=test,DC=com' -Filter 'samAccountName -like "WS*"' | select -Exp Name | Out-File $Workstations -Append
 }
 
 gc $Workstations | Sort-Object | Get-Unique | Set-Content $WorkstationsClean
