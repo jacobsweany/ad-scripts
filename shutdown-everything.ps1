@@ -41,7 +41,7 @@ foreach ($Computer in $Computers) {
 
 Start-Sleep -Seconds 10
 # Loop entire process until all online computers are no longer pingable
-while $OnlineContent -ne $null) {
+while ($OnlineContent -ne $null) {
     # Refresh input file
     $OnlineContent = Get-Content $Online
     # Test connection, shut down if online. Either way log to file. First pass.
