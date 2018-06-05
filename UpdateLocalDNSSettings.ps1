@@ -5,6 +5,8 @@ Write-Host "Importing AD Session"
 $ADSession = New-PSSession -ComputerName $DC -Credential $Credential
 Invoke-Command -Command { Import-Module ActiveDirectory } -Session $ADSession
 Import-PSSession -Session $ADSession -Module ActiveDirectory -AllowClobber
+$RunBank = New-Object psobject @{}
+
 
 $Machines = Get-ADComputer -SearchBase "OU-Path" -Filter * | Select-Object -ExpandProperty Name
 $DnsSearchOrder = "1.1.1.1", "2.2.2.2"
@@ -17,3 +19,5 @@ foreach ($Computer in $Machines) {
     $NIC.SetDNSServerSearchOrder($DnsSearchOrder)
     }
 }
+
+[array]RunBank += $TestRun
