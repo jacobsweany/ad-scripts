@@ -12,7 +12,9 @@ $Machines = Get-ADComputer -SearchBase "OU-Path" -Filter * | Select-Object -Expa
 $DnsSearchOrder = "1.1.1.1", "2.2.2.2"
 
 $MassPing = $Machines | ForEach-Object { Test-Connection -ComputerName $_ -Count 1 -AsJob } | Get-Job | Receive-Job -Wait | Select-Object Address,StatusCode
+#$OnlineComputerDetails = $MassPing | Where-Object StatusCode -EQ "0" | Select-Object Address,IPV4Address
 $OnlineComputers = $MassPing | Where-Object StatusCode -EQ "0" | Select-Object -ExpandProperty Address
+$OfflineComputers = $MassPing | Where-Object StatusCode -NE "0" | Select-Object -ExpandProperty Address
 
 foreach ($Computer in $OnlineComputers) {
   Write-Output "trying $Computer..."
