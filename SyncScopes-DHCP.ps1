@@ -3,13 +3,15 @@ $DHCPSession = New-PSSession -ComputerName "DHCPSERVERNAME"
 Invoke-Command -Session $DHCPSession { Import-Module DHCPServer }
 Import-PSSession -Session $DHCPSession -Module DHCPServer -AllowClobber
 
-$DHCPServers = Get-DHCPServerInDC | Select -ExpandProperty DnsName
-$Query = Get-DhcpServerv4Scope | Where-Object { $_.Name -notlike "*VoIP*" -and ( $_.Name -notlike "*Printer*") -and ($_.State -eq "Active") } | select Name, StartRange, EndRange, Description
+$DHCPServers = Get-DHCPServerInDC
 $RunBank = New-Object psobject @{}
 
 foreach ($server in $DHCPServers) {
-    Invoke-Command -ScriptBlock {$Query}
-    [array]$RunBank += $Query
+    $query = Get-DhcpServerV4Scope -ComputerName $server.DnsName |
+        Select-Object Name, Description, ScopeID, SubnetMask, EndRange, State
+    [array]$RunBank += $query
 }
 
-$RunBank | select Name, StartRange, EndRange, Description | Export-Csv -Path "\\path\DHCP.csv" -Force -NoTypeInformation
+$DataOnly = $RunBank | Where-Object { $_.Name -notlike "*VoIP*" -and ( $_.Name -notlike "*Printer*") -and ($_.State -eq "Active") } | select Name, Description, ScopeID, SubnetMask, EndRange
+
+$DataOnly | Export-Csv -Path "\\path\DHCP.csv" -Force -NoTypeInformation
