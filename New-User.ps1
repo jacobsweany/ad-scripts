@@ -197,16 +197,33 @@ function Get-NextAvailableLineURI {
     Param(
     [int]$SiteCode
     )
+    $MinLineURI = $SiteCode * 1000
+    $MaxLineURI = $MinLineURI + 999
     # Utilize CleanOUList to get DN of the site based off of the site code
     $siteOU = ($CleanOUList | where {$_.SiteCode -EQ $SiteCode}).DistinguishedName
     # Get all active LineURIs for the specified site OU
-    $ActiveLineURIs = Get-CsUser -OU $siteOU -Filter {LineURI -ne $null} | select -ExpandProperty LineURI 
-    # Clean up the results, take out tel:
-    foreach ($i in $ActiveLineURIs) {
-        $ActiveLineURIs[$ActiveLineURIs.IndexOf($i)] = $i.SubString(4)
+    $ActiveLineURIs = Get-CsUser -Filter {LineURI -ne $null} | select -ExpandProperty LineURI 
+    
+    # Define array which will contain only the data we need
+    $NewActiveLineURIs = @()
+    foreach ($line in $ActiveLineURIs) {
+        # Remove "tel:" from LineURI columns"
+        $line.LineURI = ($line.LineURI -replace 'tel:','')
+        # Check to see if the LineURIs are within scope set by MinLineURI and MaxLineURI variables, if true then add to new array
+        if ( ($line.LineURI -lt $MaxLineURI) -and ($line.LineURI -gt $MinLineURI) ) {
+            $NewActiveLineURIs = $NewActiveLineURIs += $line.LineURI.ToString()
+        }
     }
     # Sort list so we get the last LineURI, select the last item, convert to an integer then add 1
-    $NextAvailableLineURI = (($ActiveLineURIs |sort | select -last 1) -as [int]) +1
+    $NextAvailableLineURI = (($NewActiveLineURIs |sort | select -last 1) -as [int]) +1
+    
+    # If no LineURIs are found, create the first one
+    if ($NextAvailableLineURI -eq "1") {
+        Write-Warning "This is the first LineURI for the given range"
+        $SiteCode *= 1000
+        $SiteCode += 50
+        $NextAvailableLineURI = $SiteCode
+    }
     return $NextAvailableLineURI
 }
 
